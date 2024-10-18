@@ -1,110 +1,57 @@
+# Parser Module
 
-# ast
+This module contains the parsing logic for converting rule text written in a specified grammar into an abstract syntax tree (AST) that can be evaluated later.
 
-This module contains the nodes which comprise the abstract syntax tree generated from parsed grammar text.
+## Utilities
 
+### Classes
 
+#### `class Parser`
 
+**Bases**: `ParserBase`
 
-## classes
+The parser class for the rule grammar. This class includes numerous PLY-specific members to define various components of the grammar, enabling it to be parsed and reduced into an AST. Once constructed, the AST can be evaluated multiple times. To enhance efficiency, nodes within the AST that can be reduced are evaluated during the parsing process, which may lead to `EvaluationError` exceptions being raised.
 
+##### Constructor: `__init__(debug=False)`
 
+##### Parameters:
+- **`debug`** (bool): Whether to enable debugging features when using the PLY API.
 
-```bash
-  
- class Assignment(name, *, value=UNDEFINED, value_type=None):
-    """An internal assignment whereby a symbol is populated with a value of the specified type."""
-    __bases__ = (object,)
+---
 
-    def __init__(self, name, *, value=UNDEFINED, value_type=None):
-        """
-        Parameters:
-            name (str): The symbol name that the assignment is defining.
-            value: The value of the assignment.
-            value_type (DataType): The data type of the assignment.
-        """
-        self.name = name
-        self.value = value
-        self.value_type = value_type
+#### `class ParserBase`
 
+**Bases**: `object`
 
-```
-# statement
+A base class for parser objects to inherit from. This class does not include any grammar-related definitions.
 
-```bash
-  
- class Statement(context, expression, comment=None):
-    """Represents the top-level statement of the grammar text."""
-    __bases__ = (ASTNodeBase,)
+##### Constructor: `__init__(debug=False)`
 
+##### Parameters:
+- **`debug`** (bool): Whether to enable debugging features when using the PLY API.
 
-```
-# ExpressionBase
+---
 
-```bash
-  class ExpressionBase:
-    """Base class for all expressions."""
-    __bases__ = (ASTNodeBase,)
-    result_type = UNDEFINED
+##### Method: `parse(text, context, **kwargs)`
 
-```
-# LeftOperatorRightExpressionBase
-```bash
- 
-class LeftOperatorRightExpressionBase(context, type_, left, right):
-    """Base class for complex expressions with left and right operands."""
-    __bases__ = (ExpressionBase,)
+Parses the specified text into an AST of nodes that can later be evaluated. This occurs in two phases: first, the syntax is parsed to construct a tree of deferred/uninitialized AST nodes. Next, each node is built recursively using its respective `rule_engine.ast.ASTNodeBase.build()` method.
 
-    def __init__(self, context, type_, left, right):
-        """
-        Parameters:
-            context (Context): The context to use for evaluating the expression.
-            type (str): The grammar type of the operator.
-            left (ExpressionBase): The left expression.
-            right (ExpressionBase): The right expression.
-        """
-        self.context = context
-        self.type = type_
-        self.left = left
-        self.right = right
+###### Parameters:
+- **`text`** (str): The grammar text to parse into an AST.
+- **`context`** (`Context`): The context for specifying parsing and evaluation options.
 
-```
-# Additional Classes
+###### Returns:
+- The parsed AST statement.
 
-AddExpression
+###### Return type:
+- `Statement`
 
-```bash
-  class AddExpression(*args, **kwargs):
-    """Class for representing addition expressions from the grammar text."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = UNDEFINED
+---
 
-```
-SubtractExpression
+### Attributes
 
-```bash
-class SubtractExpression(*args, **kwargs):
-    """Class for representing subtraction expressions from the grammar text."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = UNDEFINED
+- **`precedence`**: A tuple defining the precedence of operators.
+- **`reserved_words`**: A mapping of literal words reserved for grammar to their corresponding grammar names.
 
-```
-ArithmeticExpression
-
-```bash
-class ArithmeticExpression(context, type_, left, right):
-    """Class for representing arithmetic expressions."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = FLOAT
-
-```
-ComparisonExpression
-
-```bash
-class ComparisonExpression(context, type_, left, right):
-    """Class for representing comparison expressions."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = BOOLEAN
-
-```
+---
 
