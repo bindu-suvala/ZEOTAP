@@ -60,11 +60,6 @@ Defines the context for a rule’s evaluation, allowing modifications to symbol 
 - **`default_value`**: Default value when resolving missing symbols or attributes.
 - **`decimal_context`**: Specific `decimal.Context` object for evaluating FLOAT values. Defaults to the current thread’s context.
 
-**Notes:**
-- *Changed in version 2.0.0: Added the `default_value` parameter.*
-- *Changed in version 2.1.0: If `type_resolver` is a dictionary, `type_resolver_from_dict()` is called automatically.*
-- *Changed in version 3.0.0: Added the `decimal_context` parameter.*
-
 #### Methods:
 - **`assignments(*assignments)`**: Adds specified assignments to a thread-specific scope.
 
