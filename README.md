@@ -1,110 +1,94 @@
+# Engine Module
 
-# ast
+This module provides the primary external API for the package.
 
-This module contains the nodes which comprise the abstract syntax tree generated from parsed grammar text.
+## Functions
 
+### `resolve_attribute(thing, name)`
 
+A replacement resolver function that looks up symbols as members of `thing`, similar to `thing.name`. The `thing` object can be a `namedtuple`, a custom Python class, or any object. All members of `thing` must be of a compatible data type.
 
+**Warning:** This exposes all members of `thing`. For sensitive members, use a custom resolver that checks against a whitelist of allowed attributes.
 
-## classes
+#### Parameters:
+- **`thing`**: The object from which the name attribute will be accessed.
+- **`name`** (str): The symbol name being resolved.
 
+#### Returns:
+- The value corresponding to the specified attribute name.
 
+---
 
-```bash
-  
- class Assignment(name, *, value=UNDEFINED, value_type=None):
-    """An internal assignment whereby a symbol is populated with a value of the specified type."""
-    __bases__ = (object,)
+### `resolve_item(thing, name)`
 
-    def __init__(self, name, *, value=UNDEFINED, value_type=None):
-        """
-        Parameters:
-            name (str): The symbol name that the assignment is defining.
-            value: The value of the assignment.
-            value_type (DataType): The data type of the assignment.
-        """
-        self.name = name
-        self.value = value
-        self.value_type = value_type
+A resolver function for looking up symbols as items from an object (`thing`) that supports the Mapping interface (e.g., a dictionary). This is similar to `thing['name']`.
 
+#### Parameters:
+- **`thing`**: The object from which the name item will be accessed.
+- **`name`** (str): The symbol name being resolved.
 
-```
-# statement
+#### Returns:
+- The value corresponding to the specified item name.
 
-```bash
-  
- class Statement(context, expression, comment=None):
-    """Represents the top-level statement of the grammar text."""
-    __bases__ = (ASTNodeBase,)
+---
 
+### `type_resolver_from_dict(dictionary)`
 
-```
-# ExpressionBase
+Returns a function suitable for use as the `type_resolver` for a Context instance from a dictionary. If any values in the dictionary are not of a compatible data type, a `TypeError` will be raised. The resulting function will raise a `SymbolResolutionError` if the symbol name does not exist within the dictionary.
 
-```bash
-  class ExpressionBase:
-    """Base class for all expressions."""
-    __bases__ = (ASTNodeBase,)
-    result_type = UNDEFINED
+#### Parameters:
+- **`dictionary`** (dict): A dictionary (or any object supporting the Mapping interface) from which to create the callback function.
 
-```
-# LeftOperatorRightExpressionBase
-```bash
- 
-class LeftOperatorRightExpressionBase(context, type_, left, right):
-    """Base class for complex expressions with left and right operands."""
-    __bases__ = (ExpressionBase,)
+#### Returns:
+- The callback function.
 
-    def __init__(self, context, type_, left, right):
-        """
-        Parameters:
-            context (Context): The context to use for evaluating the expression.
-            type (str): The grammar type of the operator.
-            left (ExpressionBase): The left expression.
-            right (ExpressionBase): The right expression.
-        """
-        self.context = context
-        self.type = type_
-        self.left = left
-        self.right = right
+---
 
-```
-# Additional Classes
+## Classes
 
-AddExpression
+### `class Context`
 
-```bash
-  class AddExpression(*args, **kwargs):
-    """Class for representing addition expressions from the grammar text."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = UNDEFINED
+Defines the context for a rule’s evaluation, allowing modifications to symbol resolution and regex flag usage.
 
-```
-SubtractExpression
+#### Constructor: `__init__(*, regex_flags=0, resolver=None, type_resolver=None, default_timezone='local', default_value=UNDEFINED, decimal_context=None)`
 
-```bash
-class SubtractExpression(*args, **kwargs):
-    """Class for representing subtraction expressions from the grammar text."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = UNDEFINED
+#### Parameters:
+- **`regex_flags`** (int): Flags for the `re` module when calling `match()` or `search()` for comparison expressions.
+- **`resolver`**: Optional callback function to use in place of `resolve()`.
+- **`type_resolver`** (function or dict): Optional callback function to use in place of `resolve_type()`.
+- **`default_timezone`** (str or tzinfo): Default timezone for datetime instances without a specified timezone. Accepts `tzinfo` instances or the strings "local" or "utc".
+- **`default_value`**: Default value when resolving missing symbols or attributes.
+- **`decimal_context`**: Specific `decimal.Context` object for evaluating FLOAT values. Defaults to the current thread’s context.
 
-```
-ArithmeticExpression
+**Notes:**
+- *Changed in version 2.0.0: Added the `default_value` parameter.*
+- *Changed in version 2.1.0: If `type_resolver` is a dictionary, `type_resolver_from_dict()` is called automatically.*
+- *Changed in version 3.0.0: Added the `decimal_context` parameter.*
 
-```bash
-class ArithmeticExpression(context, type_, left, right):
-    """Class for representing arithmetic expressions."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = FLOAT
+#### Methods:
+- **`assignments(*assignments)`**: Adds specified assignments to a thread-specific scope.
 
-```
-ComparisonExpression
+---
 
-```bash
-class ComparisonExpression(context, type_, left, right):
-    """Class for representing comparison expressions."""
-    __bases__ = (LeftOperatorRightExpressionBase,)
-    result_type = BOOLEAN
+### `class Rule`
 
-```
+Parses a string with a logical expression and evaluates an arbitrary object for matching based on that expression.
+
+#### Constructor: `__init__(text, context=None)`
+
+#### Parameters:
+- **`text`** (str): The text of the logical expression.
+- **`context`** (Context): The context for evaluating the expression. Default is `Context`.
+
+#### Methods:
+- **`evaluate(thing)`**: Evaluate the rule against the specified object.
+- **`filter(things)`**: Iterate over `things` and yield each member that matches.
+- **`is_valid(text, context=None)`**: Check if the rule is syntactically correct.
+- **`matches(thing)`**: Evaluate the rule against the specified object to determine if it matches.
+
+#### Attributes:
+- **`parser`**: The Parser instance used for parsing the rule text into an abstract syntax tree (AST).
+- **`to_graphviz()`**: Generate a diagram of the parsed rule’s AST using GraphViz.
+
+---
 
