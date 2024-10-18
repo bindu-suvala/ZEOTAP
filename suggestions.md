@@ -1,6 +1,5 @@
 # Suggestions Module
 
-**Added in version 3.2.0.**
 
 This module contains helper functions designed to provide suggestions when errors occur.
 
